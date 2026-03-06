@@ -1,0 +1,13 @@
+[Unit]
+Description=Enable bees deduplication for root btrfs filesystem
+After=local-fs.target
+ConditionPathExists=!/var/lib/bees-setup.done
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bees-setup
+ExecStartPost=/usr/bin/touch /var/lib/bees-setup.done
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

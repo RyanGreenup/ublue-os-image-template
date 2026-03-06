@@ -10,7 +10,7 @@ set -ouex pipefail
 # https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
 
 # this installs a package from fedora repos
-dnf5 install -y tmux 
+# dnf5 install -y <package>
 
 # Use a COPR Example:
 #
@@ -19,6 +19,11 @@ dnf5 install -y tmux
 # Disable COPRs so they don't end up enabled on the final image:
 # dnf5 -y copr disable ublue-os/staging
 
-#### Example for enabling a System Unit File
+#### System Unit Files
 
 systemctl enable podman.socket
+
+# bees first-boot setup (discovers root btrfs UUID and enables bees@<UUID>)
+cp /ctx/usr/libexec/bees-setup /usr/libexec/bees-setup
+cp /ctx/usr/lib/systemd/system/bees-setup.service /usr/lib/systemd/system/bees-setup.service
+systemctl enable bees-setup.service

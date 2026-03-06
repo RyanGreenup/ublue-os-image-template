@@ -86,7 +86,7 @@ sudoif command *args:
 #
 
 # Build the image using the specified parameters
-build $target_image=image_name $tag=default_tag:
+build $target_image=image_name $tag=default_tag $pull="missing":
     #!/usr/bin/env bash
 
     BUILD_ARGS=()
@@ -96,7 +96,7 @@ build $target_image=image_name $tag=default_tag:
 
     podman build \
         "${BUILD_ARGS[@]}" \
-        --pull=newer \
+        --pull="${pull}" \
         --tag "${target_image}:${tag}" \
         .
 
@@ -294,6 +294,18 @@ spawn-vm rebuild="0" type="qcow2" ram="6G":
       -i ./output/**/*.{{ type }}
 
 
+# Switch the current system to the locally-built image using bootc
+[group('Deploy')]
+switch $target_image=("localhost/" + image_name) $tag=default_tag: (_rootful_load_image target_image tag)
+    #!/usr/bin/bash
+    set -euo pipefail
+    # --retain keeps the previous deployment as a rollback option in GRUB
+    sudo bootc switch --retain --transport containers-storage "${target_image}:${tag}"
+
+# Build the image and test it in a QCOW2 VM
+[group('Build Virtal Machine Image')]
+test-vm $target_image=("localhost/" + image_name) $tag=default_tag: (rebuild-qcow2 target_image tag) && (_run-vm target_image tag "qcow2" "disk_config/disk.toml")
+
 # Runs shell check on all Bash scripts
 lint:
     #!/usr/bin/env bash
@@ -305,6 +317,17 @@ lint:
     fi
     # Run shellcheck on all Bash scripts
     /usr/bin/find . -iname "*.sh" -type f -exec shellcheck "{}" ';'
+
+# Install Zed Editor via Flatpak
+[group('Setup')]
+install-zed:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    python3 "$(just _project-root)/scripts/install-zed.py"
+
+[private]
+_project-root:
+    @echo "{{justfile_directory()}}"
 
 # Runs shfmt on all Bash scripts
 format:

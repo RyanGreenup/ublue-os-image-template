@@ -1,0 +1,18 @@
+#!/usr/bin/bash
+# Discover the root btrfs filesystem UUID and enable bees for it.
+set -euo pipefail
+
+FSTYPE=$(findmnt -n -o FSTYPE /)
+if [[ "$FSTYPE" != "btrfs" ]]; then
+    echo "Root filesystem is not btrfs ($FSTYPE), skipping bees setup."
+    exit 0
+fi
+
+UUID=$(findmnt -n -o UUID /)
+if [[ -z "$UUID" ]]; then
+    echo "Could not determine root filesystem UUID."
+    exit 1
+fi
+
+echo "Enabling bees for btrfs filesystem UUID=$UUID"
+systemctl enable --now "bees@${UUID}.service"
